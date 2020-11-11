@@ -143,27 +143,36 @@ public class DefaultResourceLoader implements ResourceLoader {
 	@Override
 	public Resource getResource(String location) {
 		Assert.notNull(location, "Location must not be null");
-
+		//1. 先尝试以protocolResolvers来加载
+		/**
+		 * ProtocolResolver 协议特定资源句柄的解析策略。 用作DefaultResourceLoader的SPI，允许在不继承加载器实现(或应用程序上下文实现)的情况下处理自定义协议
+		 * 子类实现ProtocolResolver 接口,然后通过实现resolve 方法来返回对应的Resource
+		 * @see #addProtocolResolver(ProtocolResolver resolver)
+		 */
 		for (ProtocolResolver protocolResolver : this.protocolResolvers) {
 			Resource resource = protocolResolver.resolve(location, this);
 			if (resource != null) {
 				return resource;
 			}
 		}
-
+		//2. 依据location特性来获取resource不同类型的resource
 		if (location.startsWith("/")) {
+			//以 / 开头，返回 ClassPathContextResource 类型的资源
 			return getResourceByPath(location);
 		}
 		else if (location.startsWith(CLASSPATH_URL_PREFIX)) {
+			//3. 以 classpath: 开头，返回 ClassPathResource 类型的资源
 			return new ClassPathResource(location.substring(CLASSPATH_URL_PREFIX.length()), getClassLoader());
 		}
 		else {
+			//4. 然后，根据是否为文件 URL ，是则返回 FileUrlResource 类型的资源，否则返回 UrlResource 类型的资源
 			try {
 				// Try to parse the location as a URL...
 				URL url = new URL(location);
 				return (ResourceUtils.isFileURL(url) ? new FileUrlResource(url) : new UrlResource(url));
 			}
 			catch (MalformedURLException ex) {
+				//5. 如果构造URL报错,抛出 MalformedURLException 异常,则采用与第2步相同的操作,实现资源定位
 				// No URL -> resolve as resource path.
 				return getResourceByPath(location);
 			}

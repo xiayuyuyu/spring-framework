@@ -41,6 +41,7 @@ import org.springframework.util.ResourceUtils;
  * @author Juergen Hoeller
  * @since 28.12.2003
  */
+//Resource默认抽象实现,包含了resource接口的绝大部分公共实现
 public abstract class AbstractResource implements Resource {
 
 	/**
@@ -50,8 +51,10 @@ public abstract class AbstractResource implements Resource {
 	 */
 	@Override
 	public boolean exists() {
+		// 基于文件来判断是否否存在
 		// Try file existence: can we find the file in the file system?
 		try {
+			//此处getFile()直接抛出异常,子类必须实现!
 			return getFile().exists();
 		}
 		catch (IOException ex) {
@@ -65,7 +68,7 @@ public abstract class AbstractResource implements Resource {
 			}
 		}
 	}
-
+	// 默认Resource 可读,未被打开,是文件
 	/**
 	 * This implementation always returns {@code true}.
 	 */
@@ -96,6 +99,7 @@ public abstract class AbstractResource implements Resource {
 	 */
 	@Override
 	public URL getURL() throws IOException {
+		// 交给子类实现
 		throw new FileNotFoundException(getDescription() + " cannot be resolved to URL");
 	}
 
@@ -105,6 +109,7 @@ public abstract class AbstractResource implements Resource {
 	 */
 	@Override
 	public URI getURI() throws IOException {
+		// 基于URL构建URI
 		URL url = getURL();
 		try {
 			return ResourceUtils.toURI(url);
@@ -131,6 +136,7 @@ public abstract class AbstractResource implements Resource {
 	 */
 	@Override
 	public ReadableByteChannel readableChannel() throws IOException {
+		//依据getInputStream()来构建 ReadableByteChannel
 		return Channels.newChannel(getInputStream());
 	}
 
@@ -142,6 +148,7 @@ public abstract class AbstractResource implements Resource {
 	 */
 	@Override
 	public long contentLength() throws IOException {
+		// 使用inputStream读一遍,来获取资源长度
 		InputStream is = getInputStream();
 		try {
 			long size = 0;
