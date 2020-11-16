@@ -11,6 +11,9 @@ public class User {
 
 	private String gender;
 
+	public User() {
+	}
+
 	public User(String name, int age, String gender) {
 		this.name = name;
 		this.age = age;
